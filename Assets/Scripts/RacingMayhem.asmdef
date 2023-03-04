@@ -1,0 +1,19 @@
+{
+    "name": "RacingMayhem",
+    "rootNamespace": "Assets/Scripts",
+    "references": [
+        "GUID:626070ea3273cb844a310aa4f53b31fa",
+        "GUID:92ee438f32d811247a22ca14bf2a3fe0",
+        "GUID:6055be8ebefd69e48b49212b09b47b2f",
+        "GUID:23cf28abc8fed474196c6702c2e7545d"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
