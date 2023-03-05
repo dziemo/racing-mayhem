@@ -31,6 +31,7 @@ public class CheckpointSystem : MonoBehaviour
             Vector3 position = pathCreator.path.GetPointAtTime(time);
             Vector3 direction = pathCreator.path.GetDirection(time);
             Instantiate(checkpointPrefab, position, Quaternion.LookRotation(direction, Vector3.up), checkpointsParent);
+            //apply road width to checkpoint
         }
     }
 }

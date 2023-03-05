@@ -1,18 +1,18 @@
-﻿using UnityEngine;
-using UnityEditor;
-using PathCreation;
+﻿using UnityEditor;
+using UnityEngine;
 
+#if UNITY_EDITOR
 namespace PathCreation.Examples
 {
     [CustomEditor(typeof(PathSceneTool), true)]
     public class PathSceneToolEditor : Editor
     {
         protected PathSceneTool pathTool;
-        bool isSubscribed;
+        private bool isSubscribed;
 
         public override void OnInspectorGUI()
         {
-            using (var check = new EditorGUI.ChangeCheckScope())
+            using (EditorGUI.ChangeCheckScope check = new EditorGUI.ChangeCheckScope())
             {
                 DrawDefaultInspector();
 
@@ -43,9 +43,10 @@ namespace PathCreation.Examples
 
         }
 
-
-        void TriggerUpdate() {
-            if (pathTool.pathCreator != null) {
+        private void TriggerUpdate()
+        {
+            if (pathTool.pathCreator != null)
+            {
                 pathTool.TriggerUpdate();
             }
         }
@@ -71,13 +72,15 @@ namespace PathCreation.Examples
             }
         }
 
-        void OnToolDestroyed() {
-            if (pathTool != null) {
+        private void OnToolDestroyed()
+        {
+            if (pathTool != null)
+            {
                 pathTool.pathCreator.pathUpdated -= OnPathModified;
             }
         }
 
- 
+
         protected virtual void Subscribe()
         {
             if (pathTool.pathCreator != null)
@@ -88,7 +91,7 @@ namespace PathCreation.Examples
             }
         }
 
-        bool TryFindPathCreator()
+        private bool TryFindPathCreator()
         {
             // Try find a path creator in the scene, if one is not already assigned
             if (pathTool.pathCreator == null)
@@ -106,3 +109,4 @@ namespace PathCreation.Examples
         }
     }
 }
+#endif

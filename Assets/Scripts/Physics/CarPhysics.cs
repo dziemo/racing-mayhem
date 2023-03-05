@@ -60,10 +60,10 @@ namespace RacingMayhem
         private ICarInput carInput;
         private Vector3 suspensionSmoothingVelocity;
 
-        private void Awake()
+        public void Initialize()
         {
-            rb.centerOfMass = centerOfMass.position;
-
+            rb.centerOfMass = centerOfMass.localPosition;
+            rb.ResetInertiaTensor();
             if (TryGetComponent(out ICarInput carInput))
             {
                 this.carInput = carInput;
