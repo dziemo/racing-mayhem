@@ -57,13 +57,11 @@ namespace RacingMayhem
         private float springDamper;
         [SerializeField]
         private float suspensionSmoothTime;
-        [SerializeField]
-        private int supportingRayChecks = 2;
-        [SerializeField]
-        private float rayCheckRange = 30;
 
         private ICarInput carInput;
         private Vector3 suspensionSmoothingVelocity;
+
+        private int wheelsNotTouching = 0;
 
         private void Awake()
         {
@@ -99,40 +97,44 @@ namespace RacingMayhem
 
         private void ApplyTireForces()
         {
+            int wheelsNotTouchingThisFrame = 0;
             for (int i = 0; i < raycastTransforms.Count; i++)
             {
                 Transform tireTransform = raycastTransforms[i];
-                RaycastHit hitInfo = GroundCheck(tireTransform, supportingRayChecks, rayCheckRange);
 
                 if (i < 2)
                 {
-                    tireTransform.localRotation = Quaternion.Lerp(tireTransform.localRotation, Quaternion.Euler(new Vector3(0, maxTireRotation * carInput.HorizontalInput)), tireRotationEase * (1 / (1 + rb.velocity.magnitude * Mathf.Abs(carInput.HorizontalInput)) * Time.fixedDeltaTime));
+                    tireTransform.localRotation = Quaternion.Lerp(tireTransform.localRotation,
+                        Quaternion.Euler(new Vector3(0, maxTireRotation * carInput.HorizontalInput)),
+                        tireRotationEase * (1 / (1 + rb.velocity.magnitude * Mathf.Abs(carInput.HorizontalInput)) * Time.fixedDeltaTime));
                 }
 
-                if (hitInfo.collider != null)
+                if (Physics.Raycast(tireTransform.position, -tireTransform.up, out RaycastHit hitInfo, raycastLength, collisionMask))
                 {
                     SuspensionForce(tireTransform, hitInfo, tireVisuals[i]);
+
                     if (accelerationType == AccelerationType.Forward && i < 2)
                     {
-                        ForwardForce(tireTransform);
+                        ForwardForce(tireTransform, hitInfo);
                     }
                     else if (accelerationType == AccelerationType.Rear && i >= 2)
                     {
-                        ForwardForce(tireTransform);
+                        ForwardForce(tireTransform, hitInfo);
                     }
                     else
                     {
-                        ForwardForce(tireTransform);
+                        ForwardForce(tireTransform, hitInfo);
                     }
 
                     SteeringForce(tireTransform);
-
                 }
                 else
                 {
+                    wheelsNotTouchingThisFrame++;
                     FullyExtendSuspension(tireVisuals[i]);
                 }
             }
+            wheelsNotTouching = wheelsNotTouchingThisFrame;
         }
 
         private void SteeringForce(Transform tireTransform)
@@ -156,25 +158,35 @@ namespace RacingMayhem
             float springForce = (offset * springStrength) - (velocity * springDamper);
             Vector3 forceApplied = springDir * springForce;
             rb.AddForceAtPosition(forceApplied, tireTransform.position);
-            tireVisual.localPosition = Vector3.SmoothDamp(tireVisual.localPosition, new Vector3(tireVisual.localPosition.x, -hitInfo.distance + 0.3f, 0), ref suspensionSmoothingVelocity, suspensionSmoothTime);
+            tireVisual.localPosition = Vector3.SmoothDamp(tireVisual.localPosition,
+                new Vector3(tireVisual.localPosition.x, -hitInfo.distance + 0.3f, 0),
+                ref suspensionSmoothingVelocity, suspensionSmoothTime);
 
             Debug.DrawRay(tireTransform.position, forceApplied.normalized, Color.green);
         }
 
         private void FullyExtendSuspension(Transform tireVisual)
         {
-            tireVisual.localPosition = Vector3.SmoothDamp(tireVisual.localPosition, new Vector3(tireVisual.localPosition.x, -raycastLength + 0.3f, 0), ref suspensionSmoothingVelocity, suspensionSmoothTime);
+            tireVisual.localPosition = Vector3.SmoothDamp(tireVisual.localPosition,
+                new Vector3(tireVisual.localPosition.x, -raycastLength + 0.3f, 0),
+                ref suspensionSmoothingVelocity, suspensionSmoothTime);
         }
 
-        private void ForwardForce(Transform tireTransform)
+        private void ForwardForce(Transform tireTransform, RaycastHit hitInfo)
         {
-            Vector3 accelDir = tireTransform.forward;
+            Vector3 accelDir = Vector3.ProjectOnPlane(tireTransform.forward, hitInfo.normal);
+
+            int notTouchingWheelsFactor = 1;
+            if (raycastTransforms.Count - wheelsNotTouching > 0)
+            {
+                notTouchingWheelsFactor += wheelsNotTouching / (raycastTransforms.Count - wheelsNotTouching);
+            }
 
             if (carInput.VerticalInput > 0)
             {
                 float carSpeed = Vector3.Dot(transform.forward, rb.velocity);
                 float normalizedSpeed = Mathf.Clamp01(Mathf.Abs(carSpeed) / carTopSpeed);
-                float availableTorque = powerCurve.Evaluate(normalizedSpeed) * carInput.VerticalInput * carTopSpeed;
+                float availableTorque = powerCurve.Evaluate(normalizedSpeed) * carInput.VerticalInput * carTopSpeed * notTouchingWheelsFactor;
                 Vector3 force = accelDir * availableTorque;
                 rb.AddForceAtPosition(force, tireTransform.position);
                 Debug.DrawRay(tireTransform.position, force.normalized, Color.blue);
@@ -183,7 +195,7 @@ namespace RacingMayhem
             {
                 float carSpeed = Vector3.Dot(-transform.forward, rb.velocity);
                 float normalizedSpeed = Mathf.Clamp01(Mathf.Abs(carSpeed) / reverseSpeed);
-                float availableTorque = powerCurve.Evaluate(normalizedSpeed) * carInput.VerticalInput * reverseSpeed;
+                float availableTorque = powerCurve.Evaluate(normalizedSpeed) * carInput.VerticalInput * reverseSpeed * notTouchingWheelsFactor;
                 Vector3 force = accelDir * availableTorque;
                 rb.AddForceAtPosition(force, tireTransform.position);
                 Debug.DrawRay(tireTransform.position, force.normalized, Color.blue);
@@ -192,37 +204,6 @@ namespace RacingMayhem
             {
                 Brake(brakeForce * rollingFrictionFactor);
             }
-        }
-
-        private RaycastHit GroundCheck(Transform tireTransform, int rays, float range)
-        {
-
-            if (Physics.Raycast(tireTransform.position, -tireTransform.up, out RaycastHit hitInfo, raycastLength, collisionMask))
-            {
-                return hitInfo;
-            }
-
-            float step = range / rays;
-            float angle = -range / 2;
-            for (int i = 0; i < rays; i++)
-            {
-                if (i == rays / 2)
-                {
-                    angle += step;
-                }
-                Vector3 supportingRayDirection = Quaternion.Euler(angle + step * i, 0, 0) * -tireTransform.up;
-                supportingRayDirection = tireTransform.TransformDirection(supportingRayDirection);
-                if (Physics.Raycast(tireTransform.position, supportingRayDirection, out RaycastHit newHitInfo, raycastLength, collisionMask))
-                {
-                    return newHitInfo;
-                }
-                else
-                {
-                    Debug.DrawRay(tireTransform.position, supportingRayDirection * raycastLength, Color.magenta);
-                }
-            }
-
-            return new RaycastHit();
         }
     }
 }
