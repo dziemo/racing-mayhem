@@ -700,11 +700,13 @@ MonoBehaviour:
   - {fileID: 1730114517694163411}
   - {fileID: 7343599972462121427}
   - {fileID: 2475082369120043573}
-  raycastLenght: 0.6
+  raycastLength: 0.6
   suspensionRestDist: 0.5
   springStrength: 3000
   springDamper: 300
-  suspensionSmoothTime: 0.2
+  suspensionSmoothTime: 0.04
+  supportingRayChecks: 2
+  rayCheckRange: 60
 --- !u!1 &8674308527628898348
 GameObject:
   m_ObjectHideFlags: 0
