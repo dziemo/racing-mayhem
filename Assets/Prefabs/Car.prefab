@@ -439,6 +439,7 @@ GameObject:
   m_Component:
   - component: {fileID: 9217721477657551046}
   - component: {fileID: 8403783374408530557}
+  - component: {fileID: 7465836372044846006}
   m_Layer: 0
   m_Name: hatchbackSports
   m_TagString: Untagged
@@ -477,8 +478,22 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1.3, y: 1.16, z: 2.75}
-  m_Center: {x: 0, y: 0.7, z: 0}
+  m_Size: {x: 1.3, y: 0.58, z: 2.75}
+  m_Center: {x: 0, y: 0.4, z: 0}
+--- !u!136 &7465836372044846006
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8403783374408530556}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  m_Radius: 0.6
+  m_Height: 3
+  m_Direction: 2
+  m_Center: {x: 0, y: 0.8, z: 0}
 --- !u!1 &8674308526886898405
 GameObject:
   m_ObjectHideFlags: 0
