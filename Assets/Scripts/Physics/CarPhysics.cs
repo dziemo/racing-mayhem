@@ -172,6 +172,7 @@ namespace RacingMayhem
 
         private void SuspensionForce(Transform tireTransform, RaycastHit hitInfo, Transform tireVisual)
         {
+            //It has to be tire.up because of pushing into slopes otherwise
             Vector3 springDir = tireTransform.up;
             Vector3 tireWorldVel = rb.GetPointVelocity(tireTransform.position);
             float offset = suspensionRestDist - hitInfo.distance;
